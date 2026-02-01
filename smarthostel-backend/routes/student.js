@@ -2,54 +2,38 @@ const express = require('express');
 const router = express.Router();
 const Student = require('../models/Student');
 
-// ✅ TEST ROUTE
-router.get('/test', (req, res) => {
-  res.json({ message: 'Student route working' });
-});
-
 // ✅ LOGIN ROUTE
+// POST /student/login
 router.post('/login', async (req, res) => {
   try {
-    const { email, password } = req.body;
+    const { emailId, password } = req.body; // <-- use emailId here
 
-    if (!email || !password) {
+    // Check if both fields are provided
+    if (!emailId || !password) {
       return res.status(400).json({
-        message: 'Email and password required',
+        message: "Email and password required",
       });
     }
 
-    const student = await Student.findOne({ email });
+    // Find the student by emailId
+    const student = await Student.findOne({ emailId });
 
     if (!student) {
-      return res.status(404).json({
-        message: 'Student not found',
-      });
+      return res.status(401).json({ message: "Invalid credentials" });
     }
 
-    // ❗ Plain password check (for now)
+    // Check password (assuming plain text for now, or use bcrypt)
     if (student.password !== password) {
-      return res.status(401).json({
-        message: 'Invalid credentials',
-      });
+      return res.status(401).json({ message: "Invalid credentials" });
     }
 
-    res.status(200).json({
-      message: 'Login successful',
-      student: {
-        id: student._id,
-        name: student.name,
-        email: student.email,
-      },
+    // Success response
+    return res.status(200).json({
+      status: "SUCCESS",
+      result: [student], // wrap in array to match your Flutter UserResponse
     });
   } catch (error) {
     console.error(error);
-    res.status(500).json({
-      message: 'Server error',
-    });
+    return res.status(500).json({ message: "Server error" });
   }
-});
-
-module.exports = router;
-router.get('/ping', (req, res) => {
-  res.json({ message: 'Student API alive' });
 });
